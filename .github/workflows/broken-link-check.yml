@@ -1,0 +1,30 @@
+name: Check for Broken Links
+
+on:
+  push:
+    branches:
+      - main   # Change if your main branch has a different name
+  schedule:
+    - cron: '0 3 * * 1'   # Every Monday at 03:00 UTC
+
+jobs:
+  lychee-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Lychee (Broken Link Checker)
+        run: |
+          curl -Ls https://github.com/lycheeverse/lychee/releases/latest/download/lychee-linux-x86_64.tar.gz | tar xz
+          chmod +x lychee
+
+      - name: Run Link Checker
+        run: |
+          ./lychee --verbose --no-progress --accept 200,403 --exclude-mail --max-concurrency 10 ./ | tee lychee-report.txt
+
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: broken-link-report
+          path: lychee-report.txt
